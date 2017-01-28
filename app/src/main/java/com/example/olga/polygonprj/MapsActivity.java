@@ -67,7 +67,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        KmlLayer mKmlLayer = null;
+        KmlLayer mKmlLayer;
 
         // Reads KML file
         try {
@@ -89,85 +89,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 == PackageManager.PERMISSION_GRANTED) {
             buildGoogleApiClient();
             mMap.setMyLocationEnabled(true);
-        }
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-
-        buildLocationRequest();
-
-        // Requests location
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-        }
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-
-        if (mCurrLocationMarker != null) {
-            mCurrLocationMarker.remove();
-        }
-
-        double latitude = location.getLatitude();
-        double longitude = location.getLongitude();
-
-        LatLng myLocation = new LatLng(latitude, longitude);
-
-        // Adds marker on current location
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(myLocation);
-        markerOptions.title(getString(R.string.map_marker_title));
-        mCurrLocationMarker = mMap.addMarker(markerOptions);
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 15));  //zoom map to myLocation
-
-        // Checks if current location inside or outside the polygon
-        // and returns the shortest distance from current location to polygon
-        ifInsidePolygon(myLocation);
-
-
-        // Stops location updates
-        if (mGoogleApiClient != null) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-        }
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        if (connectionResult.hasResolution()) {
-            try {
-                // Starts an Activity that tries to resolve the error
-                connectionResult.startResolutionForResult(this, CONNECTION_FAILURE_RESOLUTION_REQUEST);
-            } catch (IntentSender.SendIntentException e) {
-                e.printStackTrace();
-            }
-        } else {
-            Toast.makeText(this, R.string.generel_err_msg, Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void openGpsSettings() {
-        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-        startActivityForResult(intent, GPS_REQUEST);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        // Checks if GPS enabled or no
-        if (resultCode == 0) {
-            if (requestCode == GPS_REQUEST) {
-                if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                    Toast.makeText(this, R.string.gps_disabled, Toast.LENGTH_LONG).show();
-                }
-            }
         }
     }
 
@@ -221,7 +142,85 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // If permission was denied
                 Toast.makeText(this, R.string.permission_denied, Toast.LENGTH_LONG).show();
             }
-            return;
+        }
+    }
+
+    private void openGpsSettings() {
+        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+        startActivityForResult(intent, GPS_REQUEST);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Checks if GPS enabled or no
+        if (resultCode == 0) {
+            if (requestCode == GPS_REQUEST) {
+                if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    Toast.makeText(this, R.string.gps_disabled, Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+
+        buildLocationRequest();
+
+        // Requests location
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        if (connectionResult.hasResolution()) {
+            try {
+                // Starts an Activity that tries to resolve the error
+                connectionResult.startResolutionForResult(this, CONNECTION_FAILURE_RESOLUTION_REQUEST);
+            } catch (IntentSender.SendIntentException e) {
+                e.printStackTrace();
+            }
+        } else {
+            Toast.makeText(this, R.string.generel_err_msg, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+
+        if (mCurrLocationMarker != null) {
+            mCurrLocationMarker.remove();
+        }
+
+        double latitude = location.getLatitude();
+        double longitude = location.getLongitude();
+
+        LatLng myLocation = new LatLng(latitude, longitude);
+
+        // Adds marker on current location
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(myLocation);
+        markerOptions.title(getString(R.string.map_marker_title));
+        mCurrLocationMarker = mMap.addMarker(markerOptions);
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 15));  //zoom map to myLocation
+
+        // Tells the user if he is inside polygon or outside.
+        // If outside, shows the shortest distance as the message
+        showUserDistanceFromPolygon(myLocation);
+
+
+        // Stops location updates
+        if (mGoogleApiClient != null) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         }
     }
 
@@ -240,8 +239,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mGoogleApiClient.connect();
     }
 
-    // Checks if current location inside or outside the polygon
-    private void ifInsidePolygon(LatLng myLocation) {
+    // Tells the user if he is inside polygon or outside.
+    // If outside, shows the shortest distance as the message
+    private void showUserDistanceFromPolygon(LatLng myLocation) {
 
         if (kmlPolygon == null || myLocation == null) {
             return;
