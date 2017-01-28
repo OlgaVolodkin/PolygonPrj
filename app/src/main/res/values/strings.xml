@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">PolygonPrj</string>
+    <string name="title_activity_maps">Polygon</string>
+    <string name="map_marker_title">My Location</string>
+    <string name="permission_denied">Permission Denied</string>
+    <string name="inside_polygon">You are inside the polygon.</string>
+    <string name="outside_polygon">"You are outside the polygon. \nMin distance from you to the polygon is: "</string>
+    <string name="meter">" meters"</string>
+    <string name="gps_disabled">GPS is disabled</string>
+    <string name="generel_err_msg">Error occurred</string>
+
+
+</resources>
