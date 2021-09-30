@@ -45,9 +45,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationManager mLocationManager;
     private KmlPolygon kmlPolygon = null;
 
-    private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 99;
-    private final static int PERMISSIONS_REQUEST_LOCATION = 999;
-    private final static int GPS_REQUEST = 9999;
+    private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 10;
+    private final static int PERMISSIONS_REQUEST_LOCATION = 20;
+    private final static int GPS_REQUEST = 30;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,8 +59,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         checkLocationPermission();
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
     }
 
@@ -74,13 +73,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mKmlLayer = new KmlLayer(mMap, R.raw.allowed_area, getApplicationContext());
 
             // Adds mKmlLayer to map and gets polygon from KML layer
-            if (mKmlLayer != null) {
-                mKmlLayer.addLayerToMap();
-                kmlPolygon = PolygonUtil.getPolygon(mKmlLayer.getContainers().iterator().next());
-            }
-        } catch (XmlPullParserException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+            mKmlLayer.addLayerToMap();
+            kmlPolygon = PolygonUtil.getPolygon(mKmlLayer.getContainers().iterator().next());
+        } catch (XmlPullParserException | IOException e) {
             e.printStackTrace();
         }
 
@@ -92,28 +87,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    public boolean checkLocationPermission() {
-
+    public void checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        PERMISSIONS_REQUEST_LOCATION);
-            } else {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        PERMISSIONS_REQUEST_LOCATION);
-            }
-            return false;
-
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    PERMISSIONS_REQUEST_LOCATION);
         } else if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) { // checks if GPS enabled
             openGpsSettings();
-            return false;
-
-        } else {
-            return true;
         }
     }
 
@@ -211,7 +191,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         markerOptions.position(myLocation);
         markerOptions.title(getString(R.string.map_marker_title));
         mCurrLocationMarker = mMap.addMarker(markerOptions);
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 15));  //zoom map to myLocation
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 20));  //zoom map to myLocation
 
         // Tells the user if he is inside polygon or outside.
         // If outside, shows the shortest distance as the message

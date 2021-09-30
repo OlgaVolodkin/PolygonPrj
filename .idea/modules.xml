@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/PolygonPrj.iml" filepath="$PROJECT_DIR$/PolygonPrj.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/PolygonPrj.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/PolygonPrj.app.iml" />
     </modules>
   </component>
 </project>
